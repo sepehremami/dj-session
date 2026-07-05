@@ -16,6 +16,9 @@ class AuthenticationMiddleware(MiddlewareMixin):
     
     def process_request(self, request):
         
+        # Load session from cookie
+        session_key = request.COOKIES.get(settings.SESSION_COOKIE_NAME)
+        request.session = SessionStore(session_key=session_key)
         request.user = SimpleLazyObject(lambda: get_user(request))
         
         if hasattr(request, 'user') and request.user.is_authenticated:
