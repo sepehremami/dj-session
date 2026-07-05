@@ -6,11 +6,13 @@ User = get_user_model()
 
 
 def register(request):
-    if User.objects.filter(username='sepehr').exists():
+    
+    username_to_create = 'sepehr'
+    if User.objects.filter(username=username_to_create).exists():
         return HttpResponse("User already exists")
 
     user = User(
-        username='user',
+        username=username_to_create,
         email='user@gmail.com'
     )
     user.set_password("1234")
