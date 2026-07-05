@@ -1,16 +1,18 @@
 from django.shortcuts import HttpResponse
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
 
 def register(request):
-    if User.objects.filter(username='sepehr').exists():
+    
+    username_to_create = 'sepehr'
+    if User.objects.filter(username=username_to_create).exists():
         return HttpResponse("User already exists")
 
     user = User(
-        username='user',
+        username=username_to_create,
         email='user@gmail.com'
     )
     user.set_password("1234")
@@ -31,7 +33,7 @@ def login_view(request):
         )
 
         if user is not None:
-            login(request, user)
+            request._authenticated_user = user
             return HttpResponse("Logged in successfully")
 
         return HttpResponse("Invalid username or password")
@@ -41,4 +43,6 @@ def login_view(request):
 
 
 def show_session(request):
-    return HttpResponse(f'username: {request.user}')
+    if request.user.is_authenticated:
+        return HttpResponse(f'username: {request.user}')
+    return HttpResponse('username: AnonymousUser')
