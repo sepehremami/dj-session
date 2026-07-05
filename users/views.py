@@ -33,7 +33,7 @@ def login_view(request):
         )
 
         if user is not None:
-            login(request, user)
+            request.user = user
             return HttpResponse("Logged in successfully")
 
         return HttpResponse("Invalid username or password")
@@ -43,4 +43,6 @@ def login_view(request):
 
 
 def show_session(request):
-    return HttpResponse(f'username: {request.user}')
+    if request.user.is_authenticated:
+        return HttpResponse(f'username: {request.user}')
+    return HttpResponse('username: AnonymousUser')
