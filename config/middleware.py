@@ -13,45 +13,35 @@ def get_user(request):
 
 
 class AuthenticationMiddleware(MiddlewareMixin):
+    
     def process_request(self, request):
         
-        User = get_user_model()
+        request.user = SimpleLazyObject(lambda: get_user(request))
         
-        try:
-            user = User.objects.get(pk=1)
-        except User.DoesNotExist:
-            user = None
-        
-        if user:
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            user = request.user
+            
             session = SessionStore()
             session.clear()
             session.cycle_key()
-            
             session[auth.SESSION_KEY] = str(user.pk)
             session[auth.BACKEND_SESSION_KEY] = 'django.contrib.auth.backends.ModelBackend'
             session[auth.HASH_SESSION_KEY] = user.get_session_auth_hash()
             session.save()
-
+            
             # connect session to current request
             request.session = session           
             
-            # making the browser to identify other requests of this session
-            # we have to set it's key in the response
             request._forced_session_key = session.session_key       
-            
-        request.user = SimpleLazyObject(lambda: get_user(request))
-        
-    
+
     def process_response(self, request, response):
+        # convert key to coockie
         if hasattr(request, '_forced_session_key'):
-            response._set_cookie(
+            response.set_cookie(
                 settings.SESSION_COOKIE_NAME,
                 request._forced_session_key,
                 max_age=settings.SESSION_COOKIE_AGE,
-                path=settings.SESSION_COOKIE_PATH,
-                domain=settings.SESSION_COOKIE_DOMAIN,
-                secure=settings.SESSION_COOKIE_SECURE,
                 httponly=settings.SESSION_COOKIE_HTTPONLY,
+                secure=settings.SESSION_COOKIE_SECURE,
             )
-        
         return response
